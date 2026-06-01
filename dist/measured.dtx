@@ -1,0 +1,355 @@
+%% \iffalse meta-comment
+%%
+%% measured.dtx
+%% Copyright (c) 2026 Measurement Standards Laboratory
+%%
+%% Permission is hereby granted, free of charge, to any person obtaining
+%% a copy of this software and associated documentation files, to deal in
+%% the Software without restriction, including without limitation the rights
+%% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+%% copies of the Software, subject to the conditions stated in the MIT
+%% License.
+%%
+%% \fi
+%%
+%% \iffalse
+%<*driver>
+\documentclass{l3doc}
+\EnableCrossrefs
+\CodelineIndex
+\RecordChanges
+\begin{document}
+  \DocInput{measured.dtx}
+\end{document}
+%</driver>
+%% \fi
+%%
+%% \changes{v0.1}{2026/06/02}{Initial public version.}
+%%
+%% \GetFileInfo{measured.sty}
+%%
+%% \title{The \textsf{measured} package\thanks{%
+%%   This document corresponds to \textsf{measured}~v0.1,
+%%   dated 2026-06-02.}}
+%% \author{Blair Hall\\Measurement Standards Laboratory of New Zealand, Lower Hutt}
+%% \date{2026-06-02}
+%%
+%% \maketitle
+%%
+%% \begin{abstract}
+%% The \textsf{measured} package provides semantic markup for
+%% measurement models. It wraps standard \LaTeX\ maths
+%% environments (\texttt{equation}, \texttt{align}) so that
+%% metadata about each model equation and its constituent terms
+%% are written to a sidecar file (\texttt{\cs{jobname}.models})
+%% during compilation.
+%% \end{abstract}
+%%
+%% \tableofcontents
+%%
+%% \section{Introduction}
+%%
+%% When writing measurement-model documents it is useful to
+%% capture structured metadata alongside the typeset equations.
+%% The \textsf{measured} package does this transparently:
+%% the author writes equations using familiar environments and
+%% the package emits a sidecar file.
+%%
+%% \section{Usage}
+%%
+%% Load the package in the usual way:
+%% \begin{verbatim}
+%%   \usepackage{measured}
+%% \end{verbatim}
+%%
+%% \subsection{Model environments}
+%%
+%% \DescribeEnv{mdeq}
+%% A wrapper for \texttt{equation}. An optional key--value
+%% argument accepts the keys \texttt{name}, \texttt{role},
+%% \texttt{source}, and \texttt{label}.
+%% \begin{verbatim}
+%%   \begin{mdeq}[name=Ohm's law, label=eq:ohm]
+%%     V = IR
+%%   \end{mdeq}
+%% \end{verbatim}
+%%
+%% \DescribeEnv{mdalign}
+%% A wrapper for \texttt{align}, with the same metadata keys.
+%%
+%% \subsection{Term definitions}
+%%
+%% \DescribeMacro{\mddefn}
+%% |\mddefn{|\meta{label}|}{|\meta{term}|}{|\meta{definition}|}|
+%% typesets \meta{term} in inline maths mode and writes a
+%% \textsc{term} record to the sidecar file. A warning is
+%% issued if \meta{label} has not been defined by a prior
+%% |\label| command.
+%%
+%% \subsection{Semantic term macros}
+%%
+%% \DescribeMacro{\nspace}
+%% |\nspace{|\meta{text}|}| renders a namespace identifier
+%% in upright roman type.
+%%
+%% \DescribeMacro{\assoc}
+%% |\assoc{|\meta{text}|}| renders an association identifier
+%% in upright roman type.
+%%
+%% \DescribeMacro{\tv}
+%% |\tv{|\meta{text}|}| renders a term value in italic type.
+%%
+%% \DescribeMacro{\qual}
+%% |\qual{|\meta{text}|}|
+%% or |\qual{|\meta{text}|}(|\meta{sub}|)| renders a qualifier,
+%% optionally followed by a parenthesised sub-qualifier, both in
+%% upright roman type.
+%%
+%% \DescribeMacro{\mdterm}
+%% |\mdterm[|\meta{ns}|]{|\meta{sym}|}[|\meta{qual}|](|\meta{assoc}|)|
+%% composes a decorated term with optional namespace superscript,
+%% qualifier subscript, and association argument.
+%%
+%% \section{Sidecar file format}
+%%
+%% The file \texttt{\cs{jobname}.models} contains blocks
+%% delimited by header lines:
+%% \begin{description}
+%%   \item[\texttt{===== MODEL =====}] starts a model record,
+%%     followed by key--value lines for \texttt{name},
+%%     \texttt{role}, \texttt{source}, \texttt{label}, and
+%%     \texttt{equation}.
+%%   \item[\texttt{----- TERM -----}] starts a term record,
+%%     followed by \texttt{eqref}, \texttt{term}, and
+%%     \texttt{definition}.
+%% \end{description}
+%%
+%% \StopEventually{\PrintChanges\PrintIndex}
+%%
+%% \section{Implementation}
+%%
+%%    \begin{macrocode}
+%<*package>
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesExplPackage {measured} {2026-06-02} {0.1}
+  {Semantic markup for measurement models}
+
+\RequirePackage { amsmath }
+%    \end{macrocode}
+%%
+%% \subsection{Messages}
+%%
+%%    \begin{macrocode}
+\msg_new:nnn { measured } { undefined-label }
+  { mddefn:~label~'#1'~is~not~defined. }
+%    \end{macrocode}
+%%
+%% \subsection{Metadata variables}
+%%
+%%    \begin{macrocode}
+\tl_new:N \l_md_name_tl
+\tl_new:N \l_md_role_tl
+\tl_new:N \l_md_source_tl
+\tl_new:N \l_md_label_tl
+\tl_new:N \l_md_model_tl
+%    \end{macrocode}
+%%
+%% \subsection{Output stream}
+%%
+%%    \begin{macrocode}
+\iow_new:N \g_md_iow
+
+\AtBeginDocument
+  {
+    \iow_open:Nn \g_md_iow { \jobname .models }
+  }
+
+\AtEndDocument
+  {
+    \iow_close:N \g_md_iow
+  }
+%    \end{macrocode}
+%%
+%% \subsection{Metadata keys}
+%%
+%%    \begin{macrocode}
+\keys_define:nn { measured / model }
+  {
+    name   .tl_set:N = \l_md_name_tl ,
+    role   .tl_set:N = \l_md_role_tl ,
+    source .tl_set:N = \l_md_source_tl ,
+    label  .tl_set:N = \l_md_label_tl ,
+  }
+
+\keys_define:nn { measured / mddefn }
+  {
+    model .tl_set:N = \l_md_model_tl ,
+  }
+%    \end{macrocode}
+%%
+%% \subsection{Model-writing logic}
+%%
+%% \begin{macro}{\md_model_write:nn}
+%% Clears all metadata keys, applies the supplied key--value
+%% pairs, and writes a \textsc{model} block to the sidecar file.
+%%    \begin{macrocode}
+\cs_new:Npn \md_model_write:nn #1 #2
+  {
+    \tl_clear:N \l_md_name_tl
+    \tl_clear:N \l_md_role_tl
+    \tl_clear:N \l_md_source_tl
+    \tl_clear:N \l_md_label_tl
+
+    \keys_set:nn { measured / model } { #1 }
+
+    \iow_now:Nn \g_md_iow { ===== ~ MODEL ~ ===== }
+
+    \tl_if_empty:NF \l_md_name_tl
+      {
+        \iow_now:Nx \g_md_iow { name: ~ \tl_use:N \l_md_name_tl }
+      }
+
+    \tl_if_empty:NF \l_md_role_tl
+      {
+        \iow_now:Nx \g_md_iow { role: ~ \tl_use:N \l_md_role_tl }
+      }
+
+    \tl_if_empty:NF \l_md_source_tl
+      {
+        \iow_now:Nx \g_md_iow { source: ~ \tl_use:N \l_md_source_tl }
+      }
+
+    \tl_if_empty:NF \l_md_label_tl
+      {
+        \iow_now:Nx \g_md_iow { label: ~ \tl_use:N \l_md_label_tl }
+      }
+
+    \iow_now:Nx \g_md_iow { equation: ~ \tl_to_str:n {#2} }
+    \iow_now:Nn \g_md_iow { }
+  }
+%    \end{macrocode}
+%% \end{macro}
+%%
+%% \subsection{Document environments}
+%%
+%% \begin{macro}{mdeq}
+%%    \begin{macrocode}
+\NewDocumentEnvironment { mdeq } { O{} +b }
+  {
+    \md_model_write:nn {#1} {#2}
+    \begin{equation}
+      #2
+      \tl_if_empty:NF \l_md_label_tl
+        {
+          \label { \tl_use:N \l_md_label_tl }
+        }
+    \end{equation}
+  }
+  { }
+%    \end{macrocode}
+%% \end{macro}
+%%
+%% \begin{macro}{mdalign}
+%%    \begin{macrocode}
+\NewDocumentEnvironment { mdalign } { O{} +b }
+  {
+    \md_model_write:nn {#1} {#2}
+    \begin{align}
+      #2
+      \tl_if_empty:NF \l_md_label_tl
+        {
+          \label { \tl_use:N \l_md_label_tl }
+        }
+    \end{align}
+  }
+  { }
+%    \end{macrocode}
+%% \end{macro}
+%%
+%% \subsection{Term definition command}
+%%
+%% \begin{macro}{\mddefn}
+%% |#1| is an equation label (existence is checked),
+%% |#2| is the term content (typeset in maths mode),
+%% |#3| is the definition text (sidecar only).
+%%    \begin{macrocode}
+\NewDocumentCommand \mddefn { m m m }
+  {
+    \cs_if_exist:cF { r@#1 }
+      {
+        \msg_warning:nnn { measured } { undefined-label } {#1}
+      }
+    \iow_now:Nn  \g_md_iow { ----- ~ TERM ~ ----- }
+    \iow_now:Nx  \g_md_iow { eqref: ~ \tl_to_str:n {#1} }
+    \iow_now:Nx  \g_md_iow { term: ~ \tl_to_str:n {#2} }
+    \iow_now:Nx  \g_md_iow { definition: ~ \tl_to_str:n {#3} }
+    \iow_now:Nn  \g_md_iow { }
+    $#2$
+  }
+%    \end{macrocode}
+%% \end{macro}
+%%
+%% \subsection{Semantic term macros}
+%%
+%% These use conventional \LaTeXe\ syntax, so we leave
+%% \texttt{expl3} catcodes temporarily.
+%%    \begin{macrocode}
+\ExplSyntaxOff
+%    \end{macrocode}
+%%
+%% \begin{macro}{\nspace}
+%%    \begin{macrocode}
+\NewDocumentCommand{\nspace}{m}{%
+  \mathrm{#1}%
+}
+%    \end{macrocode}
+%% \end{macro}
+%%
+%% \begin{macro}{\assoc}
+%%    \begin{macrocode}
+\NewDocumentCommand{\assoc}{m}{%
+  \mathrm{#1}%
+}
+%    \end{macrocode}
+%% \end{macro}
+%%
+%% \begin{macro}{\tv}
+%%    \begin{macrocode}
+\NewDocumentCommand{\tv}{m}{%
+  \mathit{#1}%
+}
+%    \end{macrocode}
+%% \end{macro}
+%%
+%% \begin{macro}{\qual}
+%%    \begin{macrocode}
+\NewDocumentCommand{\qual}{m d()}{%
+  \mathrm{#1}\IfValueT{#2}{(\mathrm{#2})}%
+}
+%    \end{macrocode}
+%% \end{macro}
+%%
+%% \begin{macro}{\mdterm}
+%%    \begin{macrocode}
+\NewDocumentCommand{\mdterm}{o m o d()}{%
+  \IfValueT{#1}%
+    {{}^{\nspace{#1}}}%
+  {#2}%
+  \IfValueT{#3}%
+    {_{\qual{#3}}}%
+  \IfValueT{#4}%
+    {(\assoc{#4})}%
+}
+%    \end{macrocode}
+%% \end{macro}
+%%
+%%    \begin{macrocode}
+\ExplSyntaxOn
+%    \end{macrocode}
+%%
+%%    \begin{macrocode}
+\endinput
+%</package>
+%    \end{macrocode}
+%%
+%% \Finale

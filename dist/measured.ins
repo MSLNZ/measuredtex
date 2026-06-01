@@ -1,0 +1,36 @@
+%% measured.ins
+%% Installer for the measured package.
+%%
+%% Run: latex measured.ins
+%%
+\input docstrip.tex
+\keepsilent
+\askforoverwritefalse
+
+\preamble
+
+measured.sty -- Semantic markup for measurement models.
+Copyright (c) 2026 Measurement Standards Laboratory of New Zealand.
+MIT License.
+
+\endpreamble
+
+\generate{%
+  \file{measured.sty}{\from{measured.dtx}{package}}%
+}
+
+\obeyspaces
+\Msg{*************************************************************************}
+\Msg{*                                                                       *}
+\Msg{* To finish the installation, the measured.sty                          *}
+\Msg{* file should be moved into a directory searched by TeX.                *}
+\Msg{*                                                                       *}
+\Msg{* To produce the documentation, run:                                    *}
+\Msg{*   pdflatex measured.dtx                                               *}
+\Msg{*   makeindex -s gind.ist measured.idx                                  *}
+\Msg{*   makeindex -s gglo.ist -o measured.gls measured.glo                   *}
+\Msg{*   pdflatex measured.dtx                                               *}
+\Msg{*                                                                       *}
+\Msg{*************************************************************************}
+
+\endbatchfile
