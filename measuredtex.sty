@@ -1,18 +1,18 @@
 %%
-%% This is file `measured.sty',
+%% This is file `measuredtex.sty',
 %% generated with the docstrip utility.
 %%
 %% The original source files were:
 %%
-%% measured.dtx  (with options: `package')
+%% measuredtex.dtx  (with options: `package')
 %% 
-%% measured.sty -- Semantic markup for measurement models.
+%% measuredtex.sty -- Semantic markup for measurement models.
 %% Copyright (c) 2026 Measurement Standards Laboratory of New Zealand.
 %% MIT License.
 %% 
 %% \iffalse meta-comment
 %%
-%% measured.dtx
+%% measuredtex.dtx
 %% Copyright (c) 2026 Measurement Standards Laboratory
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining
@@ -29,10 +29,10 @@
 %%
 %% \changes{v0.1}{2026/06/02}{Initial public version.}
 %%
-%% \GetFileInfo{measured.sty}
+%% \GetFileInfo{measuredtex.sty}
 %%
-%% \title{The \textsf{measured} package\thanks{%
-%%   This document corresponds to \textsf{measured}~v0.1,
+%% \title{The \textsf{measuredtex} package\thanks{%
+%%   This document corresponds to \textsf{measuredtex}~v0.1,
 %%   dated 2026-06-02.}}
 %% \author{Blair Hall\\Measurement Standards Laboratory of New Zealand, Lower Hutt}
 %% \date{2026-06-02}
@@ -40,7 +40,7 @@
 %% \maketitle
 %%
 %% \begin{abstract}
-%% The \textsf{measured} package provides semantic markup for
+%% The \textsf{measuredtex} package provides semantic markup for
 %% measurement models. It wraps standard \LaTeX\ maths
 %% environments (\texttt{equation}, \texttt{align}) so that
 %% metadata about each model equation and its constituent terms
@@ -54,7 +54,7 @@
 %%
 %% When writing measurement-model documents it is useful to
 %% capture structured metadata alongside the typeset equations.
-%% The \textsf{measured} package does this transparently:
+%% The \textsf{measuredtex} package does this transparently:
 %% the author writes equations using familiar environments and
 %% the package emits a sidecar file.
 %%
@@ -62,7 +62,7 @@
 %%
 %% Load the package in the usual way:
 %% \begin{verbatim}
-%%   \usepackage{measured}
+%%   \usepackage{measuredtex}
 %% \end{verbatim}
 %%
 %% \subsection{Model environments}
@@ -133,7 +133,7 @@
 %%
 %%    \begin{macrocode}
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesExplPackage {measured} {2026-06-02} {0.1}
+\ProvidesExplPackage {measuredtex} {2026-06-02} {0.1}
   {Semantic markup for measurement models}
 
 \RequirePackage { amsmath }
@@ -141,7 +141,7 @@
 %% \subsection{Messages}
 %%
 %%    \begin{macrocode}
-\msg_new:nnn { measured } { undefined-label }
+\msg_new:nnn { measuredtex } { undefined-label }
   { mddefn:~label~'#1'~is~not~defined. }
 %%
 %% \subsection{Metadata variables}
@@ -171,7 +171,7 @@
 %% \subsection{Metadata keys}
 %%
 %%    \begin{macrocode}
-\keys_define:nn { measured / model }
+\keys_define:nn { measuredtex / model }
   {
     name   .tl_set:N = \l_md_name_tl ,
     role   .tl_set:N = \l_md_role_tl ,
@@ -179,7 +179,7 @@
     label  .tl_set:N = \l_md_label_tl ,
   }
 
-\keys_define:nn { measured / mddefn }
+\keys_define:nn { measuredtex / mddefn }
   {
     model .tl_set:N = \l_md_model_tl ,
   }
@@ -197,7 +197,7 @@
     \tl_clear:N \l_md_source_tl
     \tl_clear:N \l_md_label_tl
 
-    \keys_set:nn { measured / model } { #1 }
+    \keys_set:nn { measuredtex / model } { #1 }
 
     \iow_now:Nn \g_md_iow { ===== ~ MODEL ~ ===== }
 
@@ -271,7 +271,7 @@
   {
     \cs_if_exist:cF { r@#1 }
       {
-        \msg_warning:nnn { measured } { undefined-label } {#1}
+        \msg_warning:nnn { measuredtex } { undefined-label } {#1}
       }
     \iow_now:Nn  \g_md_iow { ----- ~ TERM ~ ----- }
     \iow_now:Nx  \g_md_iow { eqref: ~ \tl_to_str:n {#1} }
@@ -336,4 +336,4 @@
 %%    \begin{macrocode}
 \endinput
 %%
-%% End of file `measured.sty'.
+%% End of file `measuredtex.sty'.
