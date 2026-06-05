@@ -1,7 +1,6 @@
-%% \iffalse meta-comment
-%%
-%% measuredtex.dtx
-%% Copyright (c) 2026 Measurement Standards Laboratory
+% \iffalse meta-comment
+%
+% measuredtex.dtx
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining
 %% a copy of this software and associated documentation files, to deal in
@@ -10,9 +9,10 @@
 %% copies of the Software, subject to the conditions stated in the MIT
 %% License.
 %%
-%% \fi
-%%
-%% \iffalse
+%
+% \fi
+%
+% \iffalse
 %<*driver>
 \documentclass{l3doc}
 \EnableCrossrefs
@@ -22,483 +22,475 @@
   \DocInput{measuredtex.dtx}
 \end{document}
 %</driver>
-%% \fi
-%%
-%% \changes{v0.1}{2026/06/02}{Initial public version.}
-%%
-%% \GetFileInfo{measuredtex.sty}
-%%
-%% \title{The \textsf{measuredtex} package\thanks{%
-%%   This document corresponds to \textsf{measuredtex}~v0.1,
-%%   dated 2026-06-02.}}
-%% \author{Blair Hall\\Measurement Standards Laboratory of New Zealand}
-%% \date{2026-06-02}
-%%
-%% \maketitle
-%%
-%% \begin{abstract}
-%% The \textsf{measuredtex} package provides semantic markup for
-%% measurement-model documents. It supplies environments for typesetting
-%% model equations while writing structured model metadata to a sidecar
-%% file, commands for recording definitions of mathematical terms, and a
-%% lightweight mechanism for collecting textual concepts used in the
-%% document.
-%%
-%% The package currently writes model and mathematical-term records to
-%% \texttt{\cs{jobname}.models}. Textual concept records collected with
-%% \cs{mdconcept} are written at the end of the document to
-%% \texttt{\cs{jobname}.terms}.
-%% \end{abstract}
-%%
-%% \tableofcontents
-%%
-%% \section{Introduction}
-%%
-%% Measurement-model documents often contain mathematical expressions,
-%% definitions of the symbols used in those expressions, and ordinary
-%% textual terminology that should be available for downstream processing.
-%% The \textsf{measuredtex} package supports this by coupling ordinary
-%% \LaTeX\ markup with simple semantic annotations.
-%%
-%% The package is deliberately modest. It does not attempt to define a full
-%% model-interchange language. Instead, it records selected information from
-%% the source document in plain-text sidecar files during compilation. These
-%% sidecar files can then be inspected directly or processed by external
-%% tooling.
-%%
-%% The package provides three related facilities:
-%% \begin{itemize}
-%%   \item model environments that wrap standard \texttt{amsmath}
-%%     display environments and write model metadata;
-%%   \item commands and environments for recording definitions of
-%%     mathematical terms associated with a labelled model equation;
-%%   \item a command for marking textual concepts and writing a separate
-%%     concept list.
-%% \end{itemize}
-%%
-%% \section{Usage}
-%%
-%% Load the package in the usual way:
-%% \begin{verbatim}
-%%   \usepackage{measuredtex}
-%% \end{verbatim}
-%%
-%% The package requires \textsf{amsmath}.
-%%
-%% \subsection{Model environments}
-%%
-%% \begin{function}{mdeq}
-%%   \begin{syntax}
-%%     \cs{begin}\{mdeq\}\oarg{metadata}
-%%       \meta{equation body}
-%%     \cs{end}\{mdeq\}
-%%   \end{syntax}
-%%
-%%   Typesets \meta{equation body} in a standard \texttt{equation}
-%%   environment and writes a model record to
-%%   \texttt{\cs{jobname}.models}.
-%%
-%%   The optional \meta{metadata} argument is a key--value list. The
-%%   recognised keys are:
-%%   \begin{description}
-%%     \item[\texttt{name}] a human-readable name for the model;
-%%     \item[\texttt{role}] the role of the equation in the document;
-%%     \item[\texttt{source}] a source or provenance string;
-%%     \item[\texttt{label}] the \LaTeX\ label to apply to the displayed
-%%       equation.
-%%   \end{description}
-%%
-%%   If the \texttt{label} key is supplied, the same value is written to the
-%%   sidecar file and applied as a \LaTeX\ label inside the equation
-%%   environment.
-%%
-%%   For example:
-%%   \begin{verbatim}
-%%     \begin{mdeq}[name=Ohm's law, role=model, label=eq:ohm]
-%%       V = IR
-%%     \end{mdeq}
-%%   \end{verbatim}
-%% \end{function}
-%%
-%% The body of the environment is typeset as an equation. A model record is
-%% written to \texttt{\cs{jobname}.models}. If the \texttt{label} key is
-%% supplied, the environment also applies the corresponding \LaTeX\
-%% \cs{label} to the displayed equation.
-%%
-%% \begin{function}{mdalign}
-%%   \begin{syntax}
-%%     \cs{begin}\{mdalign\}\oarg{metadata}
-%%       \meta{aligned equation body}
-%%     \cs{end}\{mdalign\}
-%%   \end{syntax}
-%%
-%%   The \texttt{mdalign} environment typesets
-%%   \meta{aligned equation body} in a standard \texttt{align}
-%%   environment and writes a model record to
-%%   \texttt{\cs{jobname}.models}.
-%%
-%%   The optional \meta{metadata} argument is a key--value list. The
-%%   recognised keys are \texttt{name}, \texttt{role}, \texttt{source},
-%%   and \texttt{label}.
-%%
-%%   If the \texttt{label} key is supplied, the same value is written to the
-%%   sidecar file and applied as a \LaTeX\ label inside the displayed
-%%   \texttt{align} environment.
-%%
-%%   For example:
-%%   \begin{verbatim}
-%%     \begin{mdalign}[name=Linear model, role=model, label=eq:linear]
-%%       y &= ax + b \\
-%%       u_y^2 &= x^2 u_a^2 + a^2 u_x^2 + u_b^2
-%%     \end{mdalign}
-%%   \end{verbatim}
-%% \end{function}
-%%
-%% \subsection{Mathematical term definitions}
-%%
-%% Mathematical terms may be associated with a model equation by referring
-%% to the equation label. Term records are written to
-%% \texttt{\cs{jobname}.models}. The package checks whether the supplied
-%% equation label has been defined and issues a warning if it has not.
-%%
-%% \begin{function}{\mddefn}
-%%   \begin{syntax}
-%%     \cs{mddefn}\marg{label}\marg{term}\marg{definition}
-%%   \end{syntax}
-%%
-%%   Writes a mathematical-term definition record to
-%%   \texttt{\cs{jobname}.models}. The \meta{label} argument is the
-%%   \LaTeX\ label of the model equation to which the term belongs.
-%%   The \meta{term} argument is the mathematical term being defined, and
-%%   \meta{definition} is the corresponding definition text.
-%%
-%%   This command does not typeset any visible material in the document.
-%%   It is intended for cases where the term definition should be recorded
-%%   semantically without being rendered at the point where the command
-%%   appears.
-%%
-%%   If \meta{label} has not been defined, the package issues an
-%%   \texttt{undefined-label} warning.
-%%
-%%   For example:
-%%   \begin{verbatim}
-%%     \mddefn{eq:ohm}{V}{The voltage across the resistor}
-%%   \end{verbatim}
-%% \end{function}
-%%
-%% \begin{function}{\mddefntext}
-%%   \begin{syntax}
-%%     \cs{mddefntext}\marg{label}\marg{term}\marg{separator}
-%%       \marg{definition}
-%%   \end{syntax}
-%%
-%%   Writes a mathematical-term definition record to
-%%   \texttt{\cs{jobname}.models} and also typesets an inline textual
-%%   definition.
-%%
-%%   The \meta{label} argument is the \LaTeX\ label of the model equation
-%%   to which the term belongs. The \meta{term} argument is typeset in
-%%   inline mathematics mode. The \meta{separator} argument is inserted
-%%   between the rendered term and the definition text. The
-%%   \meta{definition} argument is both rendered in the document and written
-%%   to the sidecar file.
-%%
-%%   If \meta{label} has not been defined, the package issues an
-%%   \texttt{undefined-label} warning.
-%%
-%%   For example:
-%%   \begin{verbatim}
-%%     \mddefntext{eq:ohm}{V}{:}{the voltage across the resistor}
-%%   \end{verbatim}
-%% \end{function}
-%%
-%% \begin{function}{\mddefntab}
-%%   \begin{syntax}
-%%     \cs{mddefntab}\marg{label}\marg{term}\marg{definition}
-%%   \end{syntax}
-%%
-%%   Writes a mathematical-term definition record to
-%%   \texttt{\cs{jobname}.models} and typesets a two-column table-row
-%%   fragment.
-%%
-%%   The \meta{label} argument is the \LaTeX\ label of the model equation
-%%   to which the term belongs. The \meta{term} argument is typeset in
-%%   inline mathematics mode. The rendered output consists of the term,
-%%   followed by an alignment character, followed by \meta{definition}.
-%%
-%%   This command is intended for use inside table-like environments such
-%%   as \texttt{tabular} or \texttt{tabularx}. It does not terminate the
-%%   row; the surrounding table markup should provide any required
-%%   \verb|\\|.
-%%
-%%   If \meta{label} has not been defined, the package issues an
-%%   \texttt{undefined-label} warning.
-%%
-%%   For example:
-%%   \begin{verbatim}
-%%     \begin{tabular}{ll}
-%%       \mddefntab{eq:ohm}{V}{The voltage across the resistor} \\
-%%       \mddefntab{eq:ohm}{I}{The current through the resistor} \\
-%%       \mddefntab{eq:ohm}{R}{The resistance} \\
-%%     \end{tabular}
-%%   \end{verbatim}
-%% \end{function}
-%%
-%% \begin{function}{mddescription,\mditem}
-%%   \begin{syntax}
-%%     \cs{begin}\{mddescription\}
-%%       \cs{mditem}\marg{label}\marg{term}\marg{definition}
-%%       \ldots
-%%     \cs{end}\{mddescription\}
-%%   \end{syntax}
-%%
-%%   The \texttt{mddescription} environment provides a description-list
-%%   form for mathematical term definitions. It is a wrapper around the
-%%   standard \texttt{description} environment.
-%%
-%%   Within this environment, \cs{mditem}\marg{label}\marg{term}
-%%   \marg{definition} writes a mathematical-term definition record to
-%%   \texttt{\cs{jobname}.models} and typesets a description-list item.
-%%   The item label is \meta{term}, typeset in inline mathematics mode, and
-%%   the item body is \meta{definition}.
-%%
-%%   The \meta{label} argument is the \LaTeX\ label of the model equation
-%%   to which the term belongs. If \meta{label} has not been defined, the
-%%   package issues an \texttt{undefined-label} warning.
-%%
-%%   For example:
-%%   \begin{verbatim}
-%%     \begin{mddescription}
-%%       \mditem{eq:ohm}{V}{The voltage across the resistor}
-%%       \mditem{eq:ohm}{I}{The current through the resistor}
-%%       \mditem{eq:ohm}{R}{The resistance}
-%%     \end{mddescription}
-%%   \end{verbatim}
-%% \end{function}
-%%
-%% \subsection{Textual concepts}
-%%
-%% \begin{function}{\mdconcept}
-%%   \begin{syntax}
-%%     \cs{mdconcept}\marg{id}\marg{text}
-%%   \end{syntax}
-%%
-%%   Marks an ordinary textual concept and records it for output to the
-%%   concept sidecar file. The command typesets \meta{text} at the point
-%%   where it appears in the document, and records the pair
-%%   \meta{id}, \meta{text}.
-%%
-%%   Concept records are collected during the document and written at the
-%%   end of the document to \texttt{\cs{jobname}.terms}. Each distinct
-%%   concept ID is written once, in first-use order.
-%%
-%%   If the same \meta{id} is used again with the same \meta{text}, the
-%%   existing concept record is reused silently. If the same \meta{id} is
-%%   used again with different text, the package issues an
-%%   \texttt{inconsistent-concept} warning.
-%%
-%%   For example:
-%%   \begin{verbatim}
-%%     The \mdconcept{reference-oscillator}{reference oscillator}
-%%     provides the timing reference.
-%%   \end{verbatim}
-%%
-%%   The rendered document contains the text
-%%   \texttt{reference oscillator}. The concept sidecar file receives a
-%%   record of the form:
-%%   \begin{verbatim}
-%%     reference-oscillator: reference oscillator
-%%   \end{verbatim}
-%% \end{function}
-%%
-%% \subsection{Semantic term macros}
-%%
-%% The package also provides small mathematical formatting macros for
-%% composing semantically decorated terms. These macros typeset mathematical
-%% notation only; they do not write sidecar records by themselves.
-%%
-%% \begin{function}{\nspace}
-%%   \begin{syntax}
-%%     \cs{nspace}\marg{text}
-%%   \end{syntax}
-%%
-%%   Typesets \meta{text} as a namespace component in upright roman
-%%   mathematics text.
-%%
-%%   This command is a formatting macro only. It does not write any record
-%%   to a sidecar file.
-%%
-%%   For example:
-%%   \begin{verbatim}
-%%     \nspace{SI}
-%%   \end{verbatim}
-%% \end{function}
-%%
-%% \begin{function}{\assoc}
-%%   \begin{syntax}
-%%     \cs{assoc}\marg{text}
-%%   \end{syntax}
-%%
-%%   Typesets \meta{text} as an association component in upright roman
-%%   mathematics text.
-%%
-%%   This command is a formatting macro only. It does not write any record
-%%   to a sidecar file.
-%%
-%%   For example:
-%%   \begin{verbatim}
-%%     \assoc{input}
-%%   \end{verbatim}
-%% \end{function}
-%%
-%% \begin{function}{\qual}
-%%   \begin{syntax}
-%%     \cs{qual}\marg{text}
-%%     \cs{qual}\marg{text}\texttt{(}\meta{sub-qualifier}\texttt{)}
-%%   \end{syntax}
-%%
-%%   Typesets \meta{text} as a qualifier in upright roman mathematics text.
-%%   If the optional parenthesised \meta{sub-qualifier} is supplied, it is
-%%   appended in parentheses, also in upright roman mathematics text.
-%%
-%%   This command is a formatting macro only. It does not write any record
-%%   to a sidecar file.
-%%
-%%   For example:
-%%   \begin{verbatim}
-%%     \qual{cal}
-%%     \qual{cal}(pre)
-%%   \end{verbatim}
-%% \end{function}
-%%
-%% \begin{function}{\tv}
-%%   \begin{syntax}
-%%     \cs{tv}\marg{text}
-%%   \end{syntax}
-%%
-%%   Typesets \meta{text} as a term value in italic mathematics text.
-%%
-%%   This command is a formatting macro only. It does not write any record
-%%   to a sidecar file.
-%%
-%%   For example:
-%%   \begin{verbatim}
-%%     \tv{offset}
-%%   \end{verbatim}
-%% \end{function}
-%%
-%% \begin{function}{\mdterm}
-%%   \begin{syntax}
-%%     \cs{mdterm}\oarg{namespace}\marg{symbol}\oarg{qualifier}
-%%       \texttt{(}\meta{association}\texttt{)}
-%%   \end{syntax}
-%%
-%%   Composes a decorated mathematical term from a required
-%%   \meta{symbol} and optional namespace, qualifier, and association
-%%   components.
-%%
-%%   If \meta{namespace} is supplied, it is rendered as a superscript using
-%%   \cs{nspace}. If \meta{qualifier} is supplied, it is rendered as a
-%%   subscript using \cs{qual}. If the parenthesised \meta{association} is
-%%   supplied, it is rendered after the symbol using \cs{assoc}.
-%%
-%%   This command is a formatting macro only. It does not write any record
-%%   to a sidecar file.
-%%
-%%   For example:
-%%   \begin{verbatim}
-%%     \mdterm[SI]{V}[rms](input)
-%%   \end{verbatim}
-%% \end{function}
-%%
-%% \section{Sidecar file formats}
-%%
-%% \subsection{Model and term sidecar}
-%%
-%% The file \texttt{\cs{jobname}.models} is opened at the beginning of the
-%% document and closed at the end. Model records and mathematical-term
-%% definition records are written to this file.
-%%
-%% A model record begins with the header line:
-%% \begin{verbatim}
-%% ===== MODEL =====
-%% \end{verbatim}
-%%
-%% It may then contain any of the following metadata lines, depending on
-%% which keys were supplied:
-%% \begin{verbatim}
-%% name: <name>
-%% role: <role>
-%% source: <source>
-%% label: <label>
-%% equation: <equation-body>
-%% \end{verbatim}
-%%
-%% The \texttt{equation} line is always written for a model environment.
-%%
-%% Mathematical-term records are written as simple blocks containing:
-%% \begin{verbatim}
-%% ref: <equation-label>
-%% term: <term>
-%% definition: <definition>
-%% \end{verbatim}
-%%
-%% The current implementation does not add a separate term-record delimiter
-%% such as \texttt{----- TERM -----}.
-%%
-%% \subsection{Concept sidecar}
-%%
-%% The file \texttt{\cs{jobname}.terms} is written at the end of the
-%% document. It contains one block for each distinct concept ID recorded
-%% using \cs{mdconcept}. The output format is:
-%% \begin{verbatim}
-%% <id>: <text>
-%% \end{verbatim}
-%%
-%% Blank lines are written between concept records.
-%%
-%% \StopEventually{\PrintChanges\PrintIndex}
-%%
-%% \section{Implementation}
-%%
-%%    \begin{macrocode}
+% \fi
+%
+% \changes{v0.1}{2026/06/02}{Initial public version.}
+%
+% \GetFileInfo{measuredtex.sty}
+%
+% \title{The \textsf{measuredtex} package\thanks{%
+%   This document corresponds to \textsf{measuredtex}~v0.1,
+%   dated 2026-06-02.}}
+% \author{Blair Hall\\Measurement Standards Laboratory of New Zealand}
+% \date{2026-06-02}
+%
+% \maketitle
+%
+% \begin{abstract}
+% The \textsf{measuredtex} package provides semantic markup for
+% measurement-model documents. It supplies environments for typesetting
+% model equations while writing structured model metadata to a sidecar
+% file, commands for recording definitions of mathematical terms, and a
+% lightweight mechanism for collecting textual concepts used in the
+% document. The package currently writes model and mathematical-term records to
+% \texttt{\cs{jobname}.models}. Textual concept records collected with
+% \cs{mdconcept} are written at the end of the document to
+% \texttt{\cs{jobname}.terms}.
+% \end{abstract}
+%
+% \tableofcontents
+%
+% \section{Introduction}
+%
+% Measurement-model documents often contain mathematical expressions,
+% definitions of the symbols used in those expressions, and ordinary
+% textual terminology that should be available for downstream processing.
+% The \textsf{measuredtex} package supports this by coupling ordinary
+% \LaTeX\ markup with simple semantic annotations.
+%
+% The package is deliberately modest. It does not attempt to define a full
+% model-interchange language. Instead, it records selected information from
+% the source document in plain-text sidecar files during compilation. These
+% sidecar files can then be inspected directly or processed by external
+% tooling.
+%
+% The package provides three related facilities:
+% \begin{itemize}
+%   \item model environments that wrap standard \texttt{amsmath}
+%     display environments and write model metadata;
+%   \item commands and environments for recording definitions of
+%     mathematical terms associated with a labelled model equation;
+%   \item a command for marking textual concepts and writing a separate
+%     concept list.
+% \end{itemize}
+%
+% \section{Usage}
+%
+% Load the package in the usual way:
+% \begin{verbatim}
+%   \usepackage{measuredtex}
+% \end{verbatim}
+%
+% \subsection{Model environments}
+%
+% \begin{function}{mdeq}
+%   \begin{syntax}
+%     \cs{begin}\{mdeq\}\oarg{metadata}
+%       \meta{equation body}
+%     \cs{end}\{mdeq\}
+%   \end{syntax}
+%
+%   Typesets \meta{equation body} in a standard \texttt{equation}
+%   environment and writes a model record to
+%   \texttt{\cs{jobname}.models}.
+%
+%   The optional \meta{metadata} argument is a key--value list. The
+%   recognised keys are:
+%   \begin{description}
+%     \item[\texttt{name}] a human-readable name for the model;
+%     \item[\texttt{role}] the role of the equation in the document;
+%     \item[\texttt{source}] a source or provenance string;
+%     \item[\texttt{label}] the \LaTeX\ label to apply to the displayed
+%       equation.
+%   \end{description}
+%
+%   If the \texttt{label} key is supplied, the same value is written to the
+%   sidecar file and applied as a \LaTeX\ label inside the equation
+%   environment.
+%
+%   For example:
+%   \begin{verbatim}
+%     \begin{mdeq}[name=Ohm's law, role=model, label=eq:ohm]
+%       V = IR
+%     \end{mdeq}
+%   \end{verbatim}
+% \end{function}
+%
+% The body of the environment is typeset as an equation. A model record is
+% written to \texttt{\cs{jobname}.models}. 
+%
+% \begin{function}{mdalign}
+%   \begin{syntax}
+%     \cs{begin}\{mdalign\}\oarg{metadata}
+%       \meta{aligned equation body}
+%     \cs{end}\{mdalign\}
+%   \end{syntax}
+%
+%   The \texttt{mdalign} environment typesets
+%   \meta{aligned equation body} in a standard \texttt{align}
+%   environment and writes a model record to
+%   \texttt{\cs{jobname}.models}.
+%
+%   The optional \meta{metadata} argument is a key--value list. The
+%   recognised keys are \texttt{name}, \texttt{role}, \texttt{source},
+%   and \texttt{label}.
+%
+%   If the \texttt{label} key is supplied, the same value is written to the
+%   sidecar file and applied as a \LaTeX\ label inside the displayed
+%   \texttt{align} environment.
+%
+%   For example:
+%   \begin{verbatim}
+%     \begin{mdalign}[name=Linear model, role=model, label=eq:linear]
+%       y &= ax + b \\
+%       u_y^2 &= x^2 u_a^2 + a^2 u_x^2 + u_b^2
+%     \end{mdalign}
+%   \end{verbatim}
+% \end{function}
+%
+% \subsection{Mathematical term definitions}
+%
+% Mathematical terms may be associated with a model equation by referring
+% to the equation label. Term records are written to
+% \texttt{\cs{jobname}.models}. The package checks whether the supplied
+% equation label has been defined and issues a warning if it has not.
+%
+% \begin{function}{\mddefntext}
+%   \begin{syntax}
+%     \cs{mddefntext}\marg{label}\marg{term}\oarg{separator}
+%       \marg{definition}
+%   \end{syntax}
+%
+%   Writes a mathematical-term definition record to
+%   \texttt{\cs{jobname}.models} and also typesets an inline textual
+%   definition.
+%
+%   The \meta{label} argument is the \LaTeX\ label of the model equation
+%   to which the term belongs. The \meta{term} argument is typeset in
+%   inline mathematics mode. The optional \meta{separator} argument is rendered
+%   between the term and the definition text. 
+%   The separator is not written to the sidecar file.
+%   The \meta{definition} argument is rendered and written
+%   to the sidecar file.
+%
+%   If \meta{label} has not been defined, the package issues an
+%   \texttt{undefined-label} warning.
+%
+%   For example:
+%   \begin{verbatim}
+%     \mddefntext{eq:ohm}{V}[:]{the voltage across the resistor}
+%   \end{verbatim}
+% \end{function}
+%
+% \begin{function}{\mddefntab}
+%   \begin{syntax}
+%     \cs{mddefntab}\marg{label}\marg{term}\marg{definition}
+%   \end{syntax}
+%
+%   Writes a mathematical-term definition record to
+%   \texttt{\cs{jobname}.models} and typesets a two-column table-row
+%   fragment.
+%
+%   The \meta{label} argument is the \LaTeX\ label of the model equation
+%   to which the term belongs. The \meta{term} argument is typeset in
+%   inline mathematics mode. The rendered output consists of the term,
+%   followed by an alignment character, followed by \meta{definition}.
+%
+%   This command is intended for use inside table-like environments such
+%   as \texttt{tabular} or \texttt{tabularx}. It does not terminate the
+%   row; the surrounding table markup should provide any required
+%   \verb|\\|.
+%
+%   If \meta{label} has not been defined, the package issues an
+%   \texttt{undefined-label} warning.
+%
+%   For example:
+%   \begin{verbatim}
+%     \begin{tabular}{ll}
+%       \mddefntab{eq:ohm}{V}{The voltage across the resistor} \\
+%       \mddefntab{eq:ohm}{I}{The current through the resistor} \\
+%       \mddefntab{eq:ohm}{R}{The resistance} \\
+%     \end{tabular}
+%   \end{verbatim}
+% \end{function}
+%
+% \begin{function}{mddescription,\mditem}
+%   \begin{syntax}
+%     \cs{begin}\{mddescription\}
+%       \cs{mditem}\marg{label}\marg{term}\marg{definition}
+%       \ldots
+%     \cs{end}\{mddescription\}
+%   \end{syntax}
+%
+%   The \texttt{mddescription} environment provides a description-list
+%   form for mathematical term definitions. It is a wrapper around the
+%   standard \texttt{description} environment.
+%
+%   Within this environment, \cs{mditem}\marg{label}\marg{term}
+%   \marg{definition} writes a mathematical-term definition record to
+%   \texttt{\cs{jobname}.models} and typesets a description-list item.
+%   The item label is \meta{term}, typeset in inline mathematics mode, and
+%   the item body is \meta{definition}.
+%
+%   The \meta{label} argument is the \LaTeX\ label of the model equation
+%   to which the term belongs. If \meta{label} has not been defined, the
+%   package issues an \texttt{undefined-label} warning.
+%
+%   For example:
+%   \begin{verbatim}
+%     \begin{mddescription}
+%       \mditem{eq:ohm}{V}{The voltage across the resistor}
+%       \mditem{eq:ohm}{I}{The current through the resistor}
+%       \mditem{eq:ohm}{R}{The resistance}
+%     \end{mddescription}
+%   \end{verbatim}
+% \end{function}
+%
+% \begin{function}{\mddefn}
+%   \begin{syntax}
+%     \cs{mddefn}\marg{label}\marg{term}\marg{definition}
+%   \end{syntax}
+%
+%   Writes a mathematical-term definition record to
+%   \texttt{\cs{jobname}.models}. The \meta{label} argument is the
+%   \LaTeX\ label of the model equation to which the term belongs.
+%   The \meta{term} argument is the mathematical term being defined, and
+%   \meta{definition} is the corresponding definition text.
+%
+%   This command does not typeset any visible material in the document.
+%   It is intended for cases where the term definition should be recorded
+%   semantically without being rendered at the point where the command
+%   appears.
+%
+%   If \meta{label} has not been defined, the package issues an
+%   \texttt{undefined-label} warning.
+%
+%   For example:
+%   \begin{verbatim}
+%     \mddefn{eq:ohm}{V}{The voltage across the resistor}
+%   \end{verbatim}
+% \end{function}
+%
+% \subsection{Textual concepts}
+%
+% \begin{function}{\mdconcept}
+%   \begin{syntax}
+%     \cs{mdconcept}\marg{id}\marg{text}
+%   \end{syntax}
+%
+%   Marks an ordinary textual concept and records it for later output to the
+%   concept sidecar file. The command typesets \meta{text} at the point
+%   where it appears in the document, and records the pair
+%   \meta{id}, \meta{text}.
+%
+%   Concept records are collected during the document and written 
+%   to \texttt{\cs{jobname}.terms} at the  
+%   end of document processing. Each distinct
+%   concept ID is written once, in first-use order.
+%
+%   If an already defined \meta{id} is used with the same \meta{text}, the
+%   existing concept record is reused silently. If the \meta{id} is
+%   used again with different text, the package issues an
+%   \texttt{inconsistent-concept} warning.
+%
+%   For example:
+%   \begin{verbatim}
+%     The \mdconcept{reference-oscillator}{reference oscillator}
+%     provides the timing reference.
+%   \end{verbatim}
+%
+%   The rendered document contains the text
+%   \texttt{reference oscillator}. The concept sidecar file receives a
+%   record of the form:
+%   \begin{verbatim}
+%     reference-oscillator: reference oscillator
+%   \end{verbatim}
+% \end{function}
+%
+% \subsection{Semantic term macros}
+%
+%   The \cs{mdterm} command generates mathematical terms according to 
+%   well-defined semantic form.
+%   The command is a formatting macro. It does not write
+%   to a sidecar file.
+%
+% \begin{function}{\mdterm}
+%   \begin{syntax}
+%     \cs{mdterm}\oarg{namespace}\marg{symbol}\oarg{qualifier}
+%       \texttt{(}\meta{association}\texttt{)}
+%   \end{syntax}
+%
+%   Composes a decorated mathematical term from a
+%   \meta{symbol} and optional namespace, qualifier, and association
+%   components.
+%
+%   If \meta{namespace} is supplied, it is rendered using
+%   \cs{nspace} (by default as a superscript). 
+%   If \meta{qualifier} is supplied, it is rendered using \cs{qual}
+%   (by default as a subscript). 
+%   If the parenthesised \meta{association} is supplied, 
+%   it is rendered after using \cs{assoc} (by default in parentheses after the symbol ).
+%
+%   For example:
+%   \begin{verbatim}
+%     \mdterm[SI]{V}[rms](input)
+%   \end{verbatim}
+% \end{function}
+%
+% The package uses small mathematical formatting macros to control the typesetting 
+% of term notation. These macros may be redefined to change the format
+% generated by \cs{mdterm}.
+%
+% \begin{function}{\nspace}
+%   \begin{syntax}
+%     \cs{nspace}\marg{text}
+%   \end{syntax}
+%
+%   Typesets \meta{text} as a namespace component (default is upright roman
+%   mathematics text).
+%
+%   For example:
+%   \begin{verbatim}
+%     \nspace{SI}
+%   \end{verbatim}
+% \end{function}
+%
+% \begin{function}{\assoc}
+%   \begin{syntax}
+%     \cs{assoc}\marg{text}
+%   \end{syntax}
+%
+%   Typesets \meta{text} as an association component (default is upright roman
+%   mathematics text).
+%
+%   For example:
+%   \begin{verbatim}
+%     \assoc{input}
+%   \end{verbatim}
+% \end{function}
+%
+% \begin{function}{\qual}
+%   \begin{syntax}
+%     \cs{qual}\marg{text}
+%     \cs{qual}\marg{text}\texttt{(}\meta{sub-qualifier}\texttt{)}
+%   \end{syntax}
+%
+%   Typesets \meta{text} as a qualifier (default is upright roman mathematics text
+%   inside parentheses).
+%
+%   For example:
+%   \begin{verbatim}
+%     \qual{cal}
+%     \qual{cal}(pre)
+%   \end{verbatim}
+% \end{function}
+%
+% \begin{function}{\tv}
+%   \begin{syntax}
+%     \cs{tv}\marg{text}
+%   \end{syntax}
+%
+%   Typesets \meta{text} as a parametric term (default in italic mathematics text).
+%
+%   For example:
+%   \begin{verbatim}
+%     \tv{offset}
+%   \end{verbatim}
+% \end{function}
+%
+% \section{Sidecar file formats}
+%
+% \subsection{Model and term sidecar}
+%
+% The file \texttt{\cs{jobname}.models} is opened at the beginning of the
+% document and closed at the end. Model records and mathematical-term
+% definition records are written to this file.
+%
+% A model record begins with the header line:
+% \begin{verbatim}
+% ===== MODEL =====
+% \end{verbatim}
+%
+% It may then contain any of the following metadata lines, depending on
+% which keys were supplied:
+% \begin{verbatim}
+% name: <name>
+% role: <role>
+% source: <source>
+% label: <label>
+% equation: <equation-body>
+% \end{verbatim}
+%
+% The \texttt{equation} line is always written for a model environment.
+%
+% Mathematical-term records are written as simple blocks containing:
+% \begin{verbatim}
+% ref: <equation-label>
+% term: <term>
+% definition: <definition>
+% \end{verbatim}
+%
+% The current implementation does not add a separate term-record delimiter
+% such as \texttt{----- TERM -----}.
+%
+% \subsection{Concept sidecar}
+%
+% The file \texttt{\cs{jobname}.terms} is written at the end of the
+% document. It contains one block for each distinct concept ID recorded
+% using \cs{mdconcept}. The output format is:
+% \begin{verbatim}
+% <id>: <text>
+% \end{verbatim}
+%
+% Blank lines are written between concept records.
+%
+% \MaybeStop{%
+%   \clearpage
+%   \PrintChanges
+%   \clearpage
+%   \PrintIndex
+% }
+%
+% \section{Implementation}
+%
+%    \begin{macrocode}
 %<*package>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesExplPackage {measuredtex} {2026-06-02} {0.1}
-  {Semantic markup for measurement models}
+\ProvidesPackage{measuredtex}[2026/06/05 v0.1 Semantic measurement markup]
 \RequirePackage { amsmath }
+\ExplSyntaxOn
 %    \end{macrocode}
-%%
-%% \subsection{Messages}
-%%
-%% The package defines warning messages for undefined equation labels and
-%% for inconsistent reuse of textual concept identifiers.
-%%
-%%    \begin{macrocode}
+%
+% \subsection{Messages}
+%
+% The package defines warning messages for undefined equation labels and
+% for inconsistent reuse of textual concept identifiers.
+%
+%    \begin{macrocode}
 \msg_new:nnn { measuredtex } { undefined-label }
   { md_term_write:~label~'#1'~is~not~defined. }
 %    \end{macrocode}
-%%
-%% \subsection{Metadata variables}
+%
+% \subsection{Metadata variables}
 %%
 %% These token-list variables hold the model metadata supplied through the
 %% optional key--value argument of the model environments.
 %%
-%%    \begin{macrocode}
+%    \begin{macrocode}
 \tl_new:N \l_md_name_tl
 \tl_new:N \l_md_role_tl
 \tl_new:N \l_md_source_tl
 \tl_new:N \l_md_label_tl
 \tl_new:N \l_md_model_tl
 %    \end{macrocode}
-%%
-%% \subsection{Output stream}
+%
+% \subsection{Output stream}
 %%
 %% Two output streams are declared. The model stream is opened at the
 %% beginning of the document and closed at the end. The terms stream is
 %% opened only when the collected textual concepts are written.
 %%
-%%    \begin{macrocode}
+%    \begin{macrocode}
 \iow_new:N \g_md_iow
 \iow_new:N \g_md_terms_iow
 \AtBeginDocument
@@ -511,15 +503,14 @@
     \md_concepts_write:
   }
 %    \end{macrocode}
-%%
-%% \subsection{Metadata keys}
+% \subsection{Metadata keys}
 %%
 %% The \texttt{measuredtex/model} key family provides the supported model
 %% metadata fields. The \texttt{measuredtex/mddefn} family currently
 %% provides a \texttt{model} key, although the public term-definition
 %% commands presently take positional arguments.
 %%
-%%    \begin{macrocode}
+%    \begin{macrocode}
 \keys_define:nn { measuredtex / model }
   {
     name   .tl_set:N = \l_md_name_tl ,
@@ -532,14 +523,14 @@
     model .tl_set:N = \l_md_model_tl ,
   }
 %    \end{macrocode}
-%%
-%% \subsection{Model-writing logic}
+% \subsection{Model-writing logic}
 %%
 %% \begin{macro}[int]{\md_model_write:nn}
 %% Clears all metadata variables, applies the supplied key--value pairs,
 %% and writes a model block to the sidecar file. Empty optional metadata
 %% fields are omitted. The equation body is written in string form.
-%%    \begin{macrocode}
+%%
+%    \begin{macrocode}
 \cs_new:Npn \md_model_write:nn #1 #2
   {
     \tl_clear:N \l_md_name_tl
@@ -568,15 +559,16 @@
     \iow_now:Nn \g_md_iow { }
   }
 %    \end{macrocode}
-%% \end{macro}
+% \end{macro}
+%
+% \subsection{Document environments}
+% \begin{macro}{mdeq}
 %%
-%% \subsection{Document environments}
-%%
-%% \begin{macro}{mdeq}
 %% The \texttt{mdeq} environment records the model metadata and body, then
 %% typesets the body inside an \texttt{equation} environment. If a label was
 %% supplied through the metadata keys, it is applied inside the equation.
-%%    \begin{macrocode}
+%%
+%    \begin{macrocode}
 \NewDocumentEnvironment { mdeq } { O{} +b }
   {
     \md_model_write:nn {#1} {#2}
@@ -590,12 +582,13 @@
   }
   { }
 %    \end{macrocode}
-%% \end{macro}
+% \end{macro}
 %%
-%% \begin{macro}{mdalign}
+% \begin{macro}{mdalign}
+%%
 %% The \texttt{mdalign} environment is the corresponding wrapper for
 %% \texttt{align}.
-%%    \begin{macrocode}
+%    \begin{macrocode}
 \NewDocumentEnvironment { mdalign } { O{} +b }
   {
     \md_model_write:nn {#1} {#2}
@@ -609,15 +602,14 @@
   }
   { }
 %    \end{macrocode}
-%% \end{macro}
+% \end{macro}
+% \subsection{Term definition commands}
 %%
-%% \subsection{Term definition commands}
-%%
-%% \begin{macro}[int]{\md_term_write:nnn}
+% \begin{macro}[int]{\md_term_write:nnn}
 %% The internal term-writing function checks that the referenced equation
 %% label exists and writes the reference, term, and definition fields to the
 %% model sidecar file.
-%%    \begin{macrocode}
+%    \begin{macrocode}
 \cs_new_protected:Npn \md_term_write:nnn #1 #2 #3
   {
     \cs_if_exist:cF { r@#1 }
@@ -633,10 +625,10 @@
   {
     \md_term_write:nnn {#1} {#2} {#3}
   }
-\NewDocumentCommand \mddefntext { m m m m }
+\NewDocumentCommand \mddefntext { m m O{} m }
   {
     \md_term_write:nnn {#1} {#2} {#4}
-    $#2$ #3 #4
+    $#2$#3~#4
   }    
 \NewDocumentCommand \mddefntab { m m m }
   {
@@ -672,11 +664,13 @@
         \prop_get:NnN \g_md_concepts_prop {#1} \l_tmpa_tl
         \tl_if_eq:NnF \l_tmpa_tl {#2}
           {
-            \msg_warning:nnn
+            \msg_warning:nnnnn
               { measuredtex }
               { inconsistent-concept }
               {#1}
-          }
+              { \l_tmpa_tl }
+              {#2}
+         }
       }
       {
         \prop_put:Nnn \g_md_concepts_prop {#1} {#2}
@@ -697,57 +691,57 @@
     \iow_close:N \g_md_terms_iow
   }    
 %    \end{macrocode}
-%% \end{macro}
-%%
-%% \subsection{Semantic term macros}
+% \end{macro}
+%
+% \subsection{Semantic term macros}
 %%
 %% These commands use conventional \LaTeXe\ syntax, so the implementation
 %% temporarily leaves \texttt{expl3} syntax.
 %%
-%%    \begin{macrocode}
+%    \begin{macrocode}
 \ExplSyntaxOff
 %    \end{macrocode}
 %%
-%% \begin{macro}{\nspace}
+% \begin{macro}{\nspace}
 %% Renders a namespace component in upright roman maths text.
-%%    \begin{macrocode}
+%    \begin{macrocode}
 \NewDocumentCommand{\nspace}{m}{%
   \mathrm{#1}%
 }
 %    \end{macrocode}
-%% \end{macro}
+% \end{macro}
 %%
-%% \begin{macro}{\assoc}
+% \begin{macro}{\assoc}
 %% Renders an association component in upright roman maths text.
-%%    \begin{macrocode}
+%    \begin{macrocode}
 \NewDocumentCommand{\assoc}{m}{%
   \mathrm{#1}%
 }
 %    \end{macrocode}
-%% \end{macro}
+% \end{macro}
 %%
-%% \begin{macro}{\tv}
+% \begin{macro}{\tv}
 %% Renders a term value in italic maths text.
-%%    \begin{macrocode}
+%    \begin{macrocode}
 \NewDocumentCommand{\tv}{m}{%
   \mathit{#1}%
 }
 %    \end{macrocode}
-%% \end{macro}
+% \end{macro}
 %%
-%% \begin{macro}{\qual}
+% \begin{macro}{\qual}
 %% Renders a qualifier, with an optional parenthesised sub-qualifier.
-%%    \begin{macrocode}
+%    \begin{macrocode}
 \NewDocumentCommand{\qual}{m d()}{%
   \mathrm{#1}\IfValueT{#2}{(\mathrm{#2})}%
 }
 %    \end{macrocode}
-%% \end{macro}
+% \end{macro}
 %%
-%% \begin{macro}{\mdterm}
+% \begin{macro}{\mdterm}
 %% Composes a semantic mathematical term from an optional namespace, a
 %% required symbol, an optional qualifier, and an optional association.
-%%    \begin{macrocode}
+%    \begin{macrocode}
 \NewDocumentCommand{\mdterm}{o m o d()}{%
   \IfValueT{#1}%
     {{}^{\nspace{#1}}}%
@@ -758,17 +752,10 @@
     {(\assoc{#4})}%
 }
 %    \end{macrocode}
-%% \end{macro}
-%%
-%% Return to \texttt{expl3} syntax before ending the package.
-%%
-%%    \begin{macrocode}
-\ExplSyntaxOn
-%    \end{macrocode}
-%%
-%%    \begin{macrocode}
+% \end{macro}
+%    \begin{macrocode}
 \endinput
 %</package>
 %    \end{macrocode}
-%%
-%% \Finale
+%
+% \Finale
