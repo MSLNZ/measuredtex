@@ -492,7 +492,6 @@
 %%
 %    \begin{macrocode}
 \iow_new:N \g_md_iow
-\iow_new:N \g_md_terms_iow
 \AtBeginDocument
   {
     \iow_open:Nn \g_md_iow { \jobname .models }
@@ -500,7 +499,6 @@
 \AtEndDocument
   {
     \iow_close:N \g_md_iow
-    \md_concepts_write:
   }
 %    \end{macrocode}
 % \subsection{Metadata keys}
@@ -610,12 +608,15 @@
 %% label exists and writes the reference, term, and definition fields to the
 %% model sidecar file.
 %    \begin{macrocode}
+\bool_new:N \g_md_suppress_nested_sidecar_bool
+
 \cs_new_protected:Npn \md_term_write:nnn #1 #2 #3
   {
     \cs_if_exist:cF { r@#1 }
       {
         \msg_warning:nnn { measuredtex } { undefined-label } {#1}
       }
+    \iow_now:Nn  \g_md_iow { type: ~ term }
     \iow_now:Nx  \g_md_iow { ref: ~ \tl_to_str:n {#1} }
     \iow_now:Nx  \g_md_iow { term: ~ \tl_to_str:n {#2} }
     \iow_now:Nx  \g_md_iow { definition: ~ \tl_to_str:n {#3} }
@@ -628,16 +629,22 @@
 \NewDocumentCommand \mddefntext { m m O{} m }
   {
     \md_term_write:nnn {#1} {#2} {#4}
-    $#2$#3~#4
+    \group_begin:
+      \bool_set_true:N \g_md_suppress_nested_sidecar_bool
+      $#2$#3~#4
+    \group_end:
   }    
 \NewDocumentCommand \mddefntab { m m m }
   {
     \md_term_write:nnn {#1} {#2} {#3}
-    $#2$ & #3   
+    \bool_gset_true:N \g_md_suppress_nested_sidecar_bool
+    $#2$ & #3
+    \bool_gset_false:N \g_md_suppress_nested_sidecar_bool
   }
-\NewDocumentEnvironment { mddescription } { }
+\RequirePackage { enumitem  }
+\NewDocumentEnvironment { mddescription } { O{} }
   {
-    \begin{description}
+    \begin{description}[labelindent=\leftmargini,#1]
   }
   {
     \end{description}
@@ -645,16 +652,16 @@
 \NewDocumentCommand \mditem { m m m }
   {
     \md_term_write:nnn {#1} {#2} {#3}
-    \item[$#2$] #3
+    \group_begin:
+      \bool_set_true:N \g_md_suppress_nested_sidecar_bool
+      \item[${#2}$] #3
+    \group_end:
   }   
 \prop_new:N \g_md_concepts_prop
 \seq_new:N  \g_md_concepts_seq
-\msg_new:nnn { measuredtex } { duplicate-concept }
-  { Concept~ID~'#1'~already~defined. }
 \msg_new:nnn { measuredtex } { inconsistent-concept }
   {
-    Concept~ID~'#1'~already~defined~as~'#2',~
-    not~'#3'.
+    Concept~ID~'#1'~already~defined~as~'#2',~not~'#3'.
   }    
 \NewDocumentCommand \mdconcept { m m }
   {
@@ -665,31 +672,22 @@
         \tl_if_eq:NnF \l_tmpa_tl {#2}
           {
             \msg_warning:nnnnn
-              { measuredtex }
-              { inconsistent-concept }
-              {#1}
-              { \l_tmpa_tl }
-              {#2}
-         }
+              { measuredtex } { inconsistent-concept }
+              {#1} { \l_tmpa_tl } {#2}
+          }
       }
       {
-        \prop_put:Nnn \g_md_concepts_prop {#1} {#2}
-        \seq_put_right:Nn \g_md_concepts_seq {#1}
+        \prop_gput:Nnn \g_md_concepts_prop {#1} {#2}
+        \seq_gput_right:Nn \g_md_concepts_seq {#1}
+      }
+    \bool_if:NF \g_md_suppress_nested_sidecar_bool
+      {
+        \iow_now:Nn  \g_md_iow { type: ~ concept }
+        \iow_now:Nx  \g_md_iow { key: ~ \tl_to_str:n {#1} }
+        \iow_now:Nx  \g_md_iow { text: ~ \tl_to_str:n {#2} }
+        \iow_now:Nn  \g_md_iow { }
       }
   }
-% Write the collected concepts at the end
-\cs_new_protected:Npn \md_concepts_write:
-  {
-    \iow_open:Nn \g_md_terms_iow { \jobname.terms }
-    \seq_map_inline:Nn \g_md_concepts_seq
-      {
-        \prop_get:NnN \g_md_concepts_prop {##1} \l_tmpa_tl
-        \iow_now:Nx \g_md_terms_iow
-          { \tl_to_str:n {##1}: ~ \tl_to_str:V \l_tmpa_tl }
-        \iow_now:Nn \g_md_terms_iow { }
-      }
-    \iow_close:N \g_md_terms_iow
-  }    
 %    \end{macrocode}
 % \end{macro}
 %
