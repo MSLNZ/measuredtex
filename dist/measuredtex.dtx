@@ -155,9 +155,9 @@
 % \texttt{\cs{jobname}.models}. The package checks whether the supplied
 % equation label has been defined and issues a warning if it has not.
 %
-% \begin{function}{\mddefntext}
+% \begin{function}{\mdtext}
 %   \begin{syntax}
-%     \cs{mddefntext}\marg{label}\marg{term}\oarg{separator}
+%     \cs{mdtext}\marg{label}\marg{term}\oarg{separator}
 %       \marg{definition}
 %   \end{syntax}
 %
@@ -178,13 +178,13 @@
 %
 %   For example:
 %   \begin{verbatim}
-%     \mddefntext{eq:ohm}{V}[:]{the voltage across the resistor}
+%     \mdtext{eq:ohm}{V}[:]{the voltage across the resistor}
 %   \end{verbatim}
 % \end{function}
 %
-% \begin{function}{\mddefntab}
+% \begin{function}{\mdtab}
 %   \begin{syntax}
-%     \cs{mddefntab}\marg{label}\marg{term}\marg{definition}
+%     \cs{mdtab}\marg{label}\marg{term}\marg{definition}
 %   \end{syntax}
 %
 %   Writes a mathematical-term definition record to
@@ -207,9 +207,9 @@
 %   For example:
 %   \begin{verbatim}
 %     \begin{tabular}{ll}
-%       \mddefntab{eq:ohm}{V}{The voltage across the resistor} \\
-%       \mddefntab{eq:ohm}{I}{The current through the resistor} \\
-%       \mddefntab{eq:ohm}{R}{The resistance} \\
+%       \mdtab{eq:ohm}{V}{The voltage across the resistor} \\
+%       \mdtab{eq:ohm}{I}{The current through the resistor} \\
+%       \mdtab{eq:ohm}{R}{The resistance} \\
 %     \end{tabular}
 %   \end{verbatim}
 % \end{function}
@@ -468,7 +468,7 @@
 %
 %    \begin{macrocode}
 \msg_new:nnn { measuredtex } { undefined-label }
-  { md_term_write:~label~'#1'~is~not~defined. }
+  { md_defn_write:~label~'#1'~is~not~defined. }
 %    \end{macrocode}
 %
 % \subsection{Metadata variables}
@@ -603,40 +603,40 @@
 % \end{macro}
 % \subsection{Term definition commands}
 %%
-% \begin{macro}[int]{\md_term_write:nnn}
+% \begin{macro}[int]{\md_defn_write:nnn}
 %% The internal term-writing function checks that the referenced equation
 %% label exists and writes the reference, term, and definition fields to the
 %% model sidecar file.
 %    \begin{macrocode}
 \bool_new:N \g_md_suppress_nested_sidecar_bool
 
-\cs_new_protected:Npn \md_term_write:nnn #1 #2 #3
+\cs_new_protected:Npn \md_defn_write:nnn #1 #2 #3
   {
     \cs_if_exist:cF { r@#1 }
       {
         \msg_warning:nnn { measuredtex } { undefined-label } {#1}
       }
-    \iow_now:Nn  \g_md_iow { type: ~ term }
+    \iow_now:Nn  \g_md_iow { type: ~ definition }
     \iow_now:Nx  \g_md_iow { ref: ~ \tl_to_str:n {#1} }
     \iow_now:Nx  \g_md_iow { term: ~ \tl_to_str:n {#2} }
-    \iow_now:Nx  \g_md_iow { definition: ~ \tl_to_str:n {#3} }
+    \iow_now:Nx  \g_md_iow { description: ~ \tl_to_str:n {#3} }
     \iow_now:Nn  \g_md_iow { }
   }
 \NewDocumentCommand \mddefn { m m m }
   {
-    \md_term_write:nnn {#1} {#2} {#3}
+    \md_defn_write:nnn {#1} {#2} {#3}
   }
-\NewDocumentCommand \mddefntext { m m O{} m }
+\NewDocumentCommand \mdtext { m m O{} m }
   {
-    \md_term_write:nnn {#1} {#2} {#4}
+    \md_defn_write:nnn {#1} {#2} {#4}
     \group_begin:
       \bool_set_true:N \g_md_suppress_nested_sidecar_bool
       $#2$#3~#4
     \group_end:
   }    
-\NewDocumentCommand \mddefntab { m m m }
+\NewDocumentCommand \mdtab { m m m }
   {
-    \md_term_write:nnn {#1} {#2} {#3}
+    \md_defn_write:nnn {#1} {#2} {#3}
     \bool_gset_true:N \g_md_suppress_nested_sidecar_bool
     $#2$ & #3
     \bool_gset_false:N \g_md_suppress_nested_sidecar_bool
@@ -651,7 +651,7 @@
   }
 \NewDocumentCommand \mditem { m m m }
   {
-    \md_term_write:nnn {#1} {#2} {#3}
+    \md_defn_write:nnn {#1} {#2} {#3}
     \group_begin:
       \bool_set_true:N \g_md_suppress_nested_sidecar_bool
       \item[${#2}$] #3
@@ -663,29 +663,57 @@
   {
     Concept~ID~'#1'~already~defined~as~'#2',~not~'#3'.
   }    
-\NewDocumentCommand \mdconcept { m m }
+\tl_new:N \l_md_concept_id_tl
+
+\cs_new_protected:Npn \md_make_concept_id:nN #1 #2
   {
+    \tl_set:Nn #2 {#1}
+    \tl_trim_spaces:N #2
+    \regex_replace_all:nnN { \s+ } { _ } #2
+  }
+
+\NewDocumentCommand \mdconcept { o m }
+  {
+    \IfValueTF {#1}
+      { \tl_set:Nn \l_md_concept_id_tl {#1} }
+      { \md_make_concept_id:nN {#2} \l_md_concept_id_tl }
+
     #2
-    \prop_if_in:NnTF \g_md_concepts_prop {#1}
+
+    \prop_if_in:NVTF \g_md_concepts_prop \l_md_concept_id_tl
       {
-        \prop_get:NnN \g_md_concepts_prop {#1} \l_tmpa_tl
+        \prop_get:NVN \g_md_concepts_prop \l_md_concept_id_tl \l_tmpa_tl
         \tl_if_eq:NnF \l_tmpa_tl {#2}
           {
             \msg_warning:nnnnn
-              { measuredtex } { inconsistent-concept }
-              {#1} { \l_tmpa_tl } {#2}
+              { measuredtex }
+              { inconsistent-concept }
+              { \l_md_concept_id_tl }
+              { \l_tmpa_tl }
+              {#2}
           }
       }
       {
-        \prop_gput:Nnn \g_md_concepts_prop {#1} {#2}
-        \seq_gput_right:Nn \g_md_concepts_seq {#1}
+        \prop_gput:NVn \g_md_concepts_prop \l_md_concept_id_tl {#2}
+        \seq_gput_right:NV \g_md_concepts_seq \l_md_concept_id_tl
       }
+      
+    % Write to sidecar unless suppressed by an outer wrapper    
     \bool_if:NF \g_md_suppress_nested_sidecar_bool
       {
-        \iow_now:Nn  \g_md_iow { type: ~ concept }
-        \iow_now:Nx  \g_md_iow { key: ~ \tl_to_str:n {#1} }
-        \iow_now:Nx  \g_md_iow { text: ~ \tl_to_str:n {#2} }
-        \iow_now:Nn  \g_md_iow { }
+        \iow_now:Nn \g_md_iow { type: ~ concept }
+        \iow_now:Nx \g_md_iow
+          {
+            markup: ~
+            \c_backslash_str mdconcept ~
+            [
+            \tl_to_str:V \l_md_concept_id_tl
+            ]
+            {
+            \tl_to_str:n {#2}
+            }
+          }
+        \iow_now:Nn \g_md_iow { }
       }
   }
 %    \end{macrocode}
