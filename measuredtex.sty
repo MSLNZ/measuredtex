@@ -25,15 +25,6 @@
 \msg_new:nnn { measuredtex } { undefined-label }
   { md_defn_write:~label~'#1'~is~not~defined. }
 %%
-%% These token-list variables hold the model metadata supplied through the
-%% optional key--value argument of the model environments.
-%%
-\tl_new:N \l_md_name_tl
-\tl_new:N \l_md_role_tl
-\tl_new:N \l_md_source_tl
-\tl_new:N \l_md_label_tl
-\tl_new:N \l_md_model_tl
-%%
 %% Two output streams are declared. The model stream is opened at the
 %% beginning of the document and closed at the end. The terms stream is
 %% opened only when the collected textual concepts are written.
@@ -47,54 +38,10 @@
   {
     \iow_close:N \g_md_iow
   }
-%%
-%% The \texttt{measuredtex/model} key family provides the supported model
-%% metadata fields. The \texttt{measuredtex/mddefn} family currently
-%% provides a \texttt{model} key, although the public term-definition
-%% commands presently take positional arguments.
-%%
-\keys_define:nn { measuredtex / model }
+\cs_new:Npn \md_model_write:n #1
   {
-    name   .tl_set:N = \l_md_name_tl ,
-    role   .tl_set:N = \l_md_role_tl ,
-    source .tl_set:N = \l_md_source_tl ,
-    label  .tl_set:N = \l_md_label_tl ,
-  }
-\keys_define:nn { measuredtex / mddefn }
-  {
-    model .tl_set:N = \l_md_model_tl ,
-  }
-%%
-%% \begin{macro}[int]{\md_model_write:nn}
-%% Clears all metadata variables, applies the supplied key--value pairs,
-%% and writes a model block to the sidecar file. Empty optional metadata
-%% fields are omitted. The equation body is written in string form.
-%%
-\cs_new:Npn \md_model_write:nn #1 #2
-  {
-    \tl_clear:N \l_md_name_tl
-    \tl_clear:N \l_md_role_tl
-    \tl_clear:N \l_md_source_tl
-    \tl_clear:N \l_md_label_tl
-    \keys_set:nn { measuredtex / model } { #1 }
-    \iow_now:Nn \g_md_iow { ===== ~ MODEL ~ ===== }
-    \tl_if_empty:NF \l_md_name_tl
-      {
-        \iow_now:Nx \g_md_iow { name: ~ \tl_use:N \l_md_name_tl }
-      }
-    \tl_if_empty:NF \l_md_role_tl
-      {
-        \iow_now:Nx \g_md_iow { role: ~ \tl_use:N \l_md_role_tl }
-      }
-    \tl_if_empty:NF \l_md_source_tl
-      {
-        \iow_now:Nx \g_md_iow { source: ~ \tl_use:N \l_md_source_tl }
-      }
-    \tl_if_empty:NF \l_md_label_tl
-      {
-        \iow_now:Nx \g_md_iow { label: ~ \tl_use:N \l_md_label_tl }
-      }
-    \iow_now:Nx \g_md_iow { equation: ~ \tl_to_str:n {#2} }
+    \iow_now:Nn \g_md_iow { type: model }
+    \iow_now:Nx \g_md_iow { equation: ~ \tl_to_str:n {#1} }
     \iow_now:Nn \g_md_iow { }
   }
 %%
@@ -102,32 +49,51 @@
 %% typesets the body inside an \texttt{equation} environment. If a label was
 %% supplied through the metadata keys, it is applied inside the equation.
 %%
-\NewDocumentEnvironment { mdeq } { O{} +b }
+\NewDocumentEnvironment { mdequation } { +b }
   {
-    \md_model_write:nn {#1} {#2}
+    \md_model_write:n {#1}
     \begin{equation}
-      #2
-      \tl_if_empty:NF \l_md_label_tl
-        {
-          \label { \tl_use:N \l_md_label_tl }
-        }
+      #1
     \end{equation}
   }
   { }
+\cs_new_eq:NN \mdeq \mdequation
+\cs_new_eq:NN \endmdeq \endmdequation
 %%
 %%
-%% The \texttt{mdalign} environment is the corresponding wrapper for
-%% \texttt{align}.
-\NewDocumentEnvironment { mdalign } { O{} +b }
+%% The \texttt{mdsplit} environment is a wrapper for \texttt{split} inside \texttt{equation}.
+\cs_new_protected:Npn \md_split_equation:n #1
   {
-    \md_model_write:nn {#1} {#2}
-    \begin{align}
-      #2
-      \tl_if_empty:NF \l_md_label_tl
-        {
-          \label { \tl_use:N \l_md_label_tl }
-        }
-    \end{align}
+    \begin{equation}
+      \begin{split}
+        #1
+      \end{split}
+    \end{equation}
+  }
+
+\NewDocumentEnvironment { splitequation } { b }
+  {
+    \md_split_equation:n {#1}
+  }
+  { \ignorespacesafterend }
+\cs_new_eq:NN \spliteq \splitequation
+\cs_new_eq:NN \endspliteq \endsplitequation
+
+\NewDocumentEnvironment { mdsplitequation } { b }
+  {
+    \md_model_write:n {#1}
+    \md_split_equation:n {#1}
+  }
+  { \ignorespacesafterend }
+\cs_new_eq:NN \mdspliteq \mdsplitequation
+\cs_new_eq:NN \endmdspliteq \endmdsplitequation
+
+\NewDocumentEnvironment { mdmultline } { b }
+  {
+    \md_model_write:n {#1}
+    \begin{multline}
+      #1
+    \end{multline}
   }
   { }
 %%
@@ -167,22 +133,34 @@
     $#2$ & #3
     \bool_gset_false:N \g_md_suppress_nested_sidecar_bool
   }
+
 \RequirePackage { enumitem  }
-\NewDocumentEnvironment { mddescription } { O{} }
+\tl_new:N \l_md_item_sep_tl
+
+\NewDocumentEnvironment { mddescription } { O{} O{} }
   {
-    \begin{description}[labelindent=\leftmargini,#1]
+    \group_begin:
+      \tl_set:Nn \l_md_item_sep_tl {#1}
+      \begin{description}[
+        itemsep=0pt,
+        labelindent=\leftmargini,
+        #2
+      ]
   }
   {
     \end{description}
+    \group_end:
   }
+
 \NewDocumentCommand \mditem { m m m }
   {
     \md_defn_write:nnn {#1} {#2} {#3}
     \group_begin:
       \bool_set_true:N \g_md_suppress_nested_sidecar_bool
-      \item[${#2}$] #3
+      \item[${#2}$\l_md_item_sep_tl] #3
     \group_end:
   }
+
 \prop_new:N \g_md_concepts_prop
 \seq_new:N  \g_md_concepts_seq
 \msg_new:nnn { measuredtex } { inconsistent-concept }
