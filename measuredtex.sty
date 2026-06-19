@@ -137,10 +137,13 @@
 \RequirePackage { enumitem  }
 \tl_new:N \l_md_item_sep_tl
 
-\NewDocumentEnvironment { mddescription } { O{} O{} }
+\NewDocumentEnvironment { mddescription } { o O{} }
   {
     \group_begin:
-      \tl_set:Nn \l_md_item_sep_tl {#1}
+      \IfValueTF {#1}
+          {\tl_set:Nn \l_md_item_sep_tl {#1 \c_space_tl} }
+          {\tl_set:Nn \l_md_item_sep_tl {}}
+      
       \begin{description}[
         itemsep=0pt,
         labelindent=\leftmargini,
@@ -157,7 +160,7 @@
     \md_defn_write:nnn {#1} {#2} {#3}
     \group_begin:
       \bool_set_true:N \g_md_suppress_nested_sidecar_bool
-      \item[${#2}$\l_md_item_sep_tl] #3
+      \item[${#2}$]\l_md_item_sep_tl #3
     \group_end:
   }
 
